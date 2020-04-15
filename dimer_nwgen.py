@@ -50,42 +50,52 @@ def write_task(filename):
         f.write("task scf")
 
 
-def write_job_script(filenames):
+def write_job_script(filenames, output_dir):
     with open("run.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         for filename in filenames:
             f.write("mpirun -np 6 nwchem {0}.nwin &> {0}.log\n".format(filename))
 
+    with open("../run-all.sh", 'a') as f:
+        f.write("cd {0}\n".format(output_dir))
+        f.write("./run.sh\n")
+
     os.chmod("run.sh", 0o755)
 
 
 def main():
-    input_xyz = sys.argv[1]
-    output_dir = input_xyz[:-10]
-    with open(input_xyz, "r") as f:
-        xyz = f.readlines()
-        xyz = [str(line).lstrip() for line in xyz if line != "\n"]
-    filenames = (output_dir + "_dimer",
-                 output_dir + "_monomer_a",
-                 output_dir + "_monomer_b")
+    input_xyz_list = sys.argv[1:]
+    with open("run-all.sh", 'w') as f:
+        f.write("#!/usr/bin/env bash\n\n")
+    os.chmod("run-all.sh", 0o755)
 
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
-    os.chdir(output_dir)
+    for input_xyz in input_xyz_list:
+        output_dir = input_xyz[:-10]
+        with open(input_xyz, "r") as f:
+            xyz = f.readlines()
+            xyz = [str(line).lstrip() for line in xyz if line != "\n"]
+        filenames = (output_dir + "_dimer",
+                     output_dir + "_monomer_a",
+                     output_dir + "_monomer_b")
 
-    for filename in filenames:
-        write_title(filename)
-        atoms = write_geometry(filename, xyz)
-        write_basis(filename, atoms)
-        write_task(filename)
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+        os.chdir(output_dir)
 
-    write_job_script(filenames)
+        for filename in filenames:
+            write_title(filename)
+            atoms = write_geometry(filename, xyz)
+            write_basis(filename, atoms)
+            write_task(filename)
 
-    os.chdir("..")
+        write_job_script(filenames, output_dir)
+
+        os.chdir("..")
+
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         print("usage: dimer_nwgen.py [dimer XYZ file]")
         print("dimer XYZ file must end in '_dimer.xyz'")
     else:
