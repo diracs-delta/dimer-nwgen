@@ -50,6 +50,15 @@ def write_task(filename):
         f.write("task scf")
 
 
+def write_job_script(filenames):
+    with open("run.sh", 'w') as f:
+        f.write("#!/usr/bin/env bash\n\n")
+        for filename in filenames:
+            f.write("mpirun -np 6 nwchem {0}.nwin &> {0}.log\n".format(filename))
+
+    os.chmod("run.sh", 0o755)
+
+
 def main():
     input_xyz = sys.argv[1]
     output_dir = input_xyz[:-10]
@@ -69,6 +78,8 @@ def main():
         atoms = write_geometry(filename, xyz)
         write_basis(filename, atoms)
         write_task(filename)
+
+    write_job_script(filenames)
 
     os.chdir("..")
 
