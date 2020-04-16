@@ -50,6 +50,27 @@ def write_task(filename):
         f.write("task scf")
 
 
+def write_MC_file(filename):
+    dimer = True if filename.endswith("dimer") else False
+
+    with open(filename + ".mcin", 'w') as f:
+        f.write("JOBNAME {0}.MP2_F12_VBX.cv_TRUE\n".format(filename))
+        f.write("JOBTYPE ENERGY\n")
+        f.write("TASK MP2_F12_VBX\n")
+        f.write("MP2CV_LEVEL 2\n")
+        f.write("MC_TRIAL 1024\n")
+        f.write("ELECTRON_PAIRS 128\n")
+        f.write("ELECTRONS 64\n")
+        f.write("SEED_FILE {0}.MP2_F12_VBX.cv_TRUE\n".format(filename))
+        f.write("DEBUG {0}\n".format("0" if dimer else "2"))
+        f.write("SAMPLER DIRECT\n")
+        f.write("TAU_INTEGRATION STOCHASTIC\n")
+        f.write("GEOM {0}.xyz\n".format(filename))
+        f.write("BASIS ../basis/aug-cc-pvdz.basis\n")
+        f.write("MC_BASIS ../basis/aug-cc-pvdz.mc_basis\n")
+        f.write("MOVECS {0}.movecs\n".format(filename))
+
+
 def write_job_script(filenames, output_dir):
     with open("run.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
@@ -59,6 +80,7 @@ def write_job_script(filenames, output_dir):
     with open("../run-all.sh", 'a') as f:
         f.write("cd {0}\n".format(output_dir))
         f.write("./run.sh\n")
+        f.write("cd ..\n")
 
     os.chmod("run.sh", 0o755)
 
@@ -87,6 +109,7 @@ def main():
             atoms = write_geometry(filename, xyz)
             write_basis(filename, atoms)
             write_task(filename)
+            write_MC_file(filename)
 
         write_job_script(filenames, output_dir)
 
