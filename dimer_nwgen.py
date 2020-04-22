@@ -74,24 +74,39 @@ def write_MC_file(filename):
 
 
 def write_job_script(filenames, output_dir):
-    with open("run.sh", 'w') as f:
+    with open("run-nw.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         for filename in filenames:
-            f.write("mpirun -np 6 nwchem {0}.nwin &> {0}.log\n".format(filename))
+            f.write("mpirun -np 8 nwchem {0}.nwin &> {0}.log\n".format(filename))
+
+    with open("run-mc.sh", 'w') as f:
+        f.write("#!/usr/bin/env bash\n\n")
+        for filename in filenames:
+            f.write("mpirun -np 8 MC_MPn_Direct {0}.nwin &> {0}.log\n".format(filename))
 
     with open("../run-all-nw.sh", 'a') as f:
         f.write("cd {0}\n".format(output_dir))
         f.write("./run-nw.sh\n")
         f.write("cd ..\n")
 
-    os.chmod("run.sh", 0o755)
+    with open("../run-all-mc.sh", 'a') as f:
+        f.write("cd {0}\n".format(output_dir))
+        f.write("./run-mc.sh\n")
+        f.write("cd ..\n")
+
+    os.chmod("run-nw.sh", 0o755)
+    os.chmod("run-mc.sh", 0o755)
 
 
 def main():
     input_xyz_list = sys.argv[1:]
-    with open("run-all.sh", 'w') as f:
+
+    with open("run-all-nw.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
-    os.chmod("run-all.sh", 0o755)
+    with open("run-all-mc.sh", 'w') as f:
+        f.write("#!/usr/bin/env bash\n\n")
+    os.chmod("run-all-nw.sh", 0o755)
+    os.chmod("run-all-mc.sh", 0o755)
 
     for input_xyz in input_xyz_list:
         output_dir = input_xyz[:-10]
