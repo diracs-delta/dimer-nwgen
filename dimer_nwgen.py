@@ -51,7 +51,7 @@ def write_task(filename):
         f.write("task scf")
 
 
-def write_MC_file(filename, args):
+def write_MC_file(filename, dimer_filename, args):
     dimer = True if filename.endswith("dimer") else False
 
     with open(filename + ".mcin", 'w') as f:
@@ -63,7 +63,7 @@ def write_MC_file(filename, args):
         f.write("MC_TRIAL 1048576\n")
         f.write("ELECTRON_PAIRS {0}\n".format(args.ep))
         f.write("ELECTRONS {0}\n".format(args.e))
-        f.write("SEED_FILE {0}.MP2_F12_VBX.cv_TRUE\n".format(filename))
+        f.write("SEED_FILE {0}.MP2_F12_VBX.cv_TRUE.SEED\n".format(dimer_filename))
         f.write("DEBUG {0}\n".format("0" if dimer else "2"))
         f.write("SAMPLER DIRECT\n")
         f.write("TAU_INTEGRATION STOCHASTIC\n")
@@ -122,6 +122,7 @@ def main(args):
         filenames = (output_dir + "_dimer",
                      output_dir + "_monomer_a",
                      output_dir + "_monomer_b")
+        dimer_filename = filenames[0]
 
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
@@ -132,7 +133,7 @@ def main(args):
             atoms = write_geometry(filename, xyz)
             write_basis(filename, atoms)
             write_task(filename)
-            write_MC_file(filename, args)
+            write_MC_file(filename, dimer_filename, args)
 
         write_job_script(filenames, output_dir, args)
 
