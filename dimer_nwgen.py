@@ -51,7 +51,7 @@ def write_task(filename):
         f.write("task scf")
 
 
-def write_MC_file(filename):
+def write_MC_file(filename, args):
     dimer = True if filename.endswith("dimer") else False
 
     with open(filename + ".mcin", 'w') as f:
@@ -61,8 +61,8 @@ def write_MC_file(filename):
         f.write("TASK MP2_F12_VBX\n")
         f.write("MP2CV_LEVEL 2\n")
         f.write("MC_TRIAL 1048576\n")
-        f.write("ELECTRON_PAIRS 128\n")
-        f.write("ELECTRONS 64\n")
+        f.write("ELECTRON_PAIRS {0}\n".format(args.ep))
+        f.write("ELECTRONS {0}\n".format(args.e))
         f.write("SEED_FILE {0}.MP2_F12_VBX.cv_TRUE\n".format(filename))
         f.write("DEBUG {0}\n".format("0" if dimer else "2"))
         f.write("SAMPLER DIRECT\n")
@@ -73,22 +73,22 @@ def write_MC_file(filename):
         f.write("MOVECS {0}.movecs\n".format(filename))
 
 
-def write_job_script(filenames, output_dir, num_proc, log):
+def write_job_script(filenames, output_dir, args):
     with open("run-nw.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         for filename in filenames:
-            if log:
-                f.write("mpirun -np {1} nwchem {0}.nwin 2>&1 | tee -a {0}.log\n".format(filename, num_proc))
+            if args.log:
+                f.write("mpirun -np {1} nwchem {0}.nwin 2>&1 | tee -a {0}.log\n".format(filename, args.n))
             else:
-                f.write("mpirun -np {1} nwchem {0}.nwin\n".format(filename, num_proc))
+                f.write("mpirun -np {1} nwchem {0}.nwin\n".format(filename, args.n))
 
     with open("run-mc.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         for filename in filenames:
-            if log:
-                f.write("mpirun -np {1} MC_MPn_Direct {0}.mcin 2>&1 | tee -a {0}.log\n".format(filename, num_proc))
+            if args.log:
+                f.write("mpirun -np {1} MC_MPn_Direct {0}.mcin 2>&1 | tee -a {0}.log\n".format(filename, args.n))
             else:
-                f.write("mpirun -np {1} MC_MPn_Direct {0}.mcin\n".format(filename, num_proc))
+                f.write("mpirun -np {1} MC_MPn_Direct {0}.mcin\n".format(filename, args.n))
 
     with open("../run-all-nw.sh", 'a') as f:
         f.write("cd {0}\n".format(output_dir))
@@ -106,8 +106,6 @@ def write_job_script(filenames, output_dir, num_proc, log):
 
 def main(args):
     xyz_files = args.xyz_files
-    num_proc = args.n
-    log = args.log
 
     with open("run-all-nw.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
@@ -134,9 +132,9 @@ def main(args):
             atoms = write_geometry(filename, xyz)
             write_basis(filename, atoms)
             write_task(filename)
-            write_MC_file(filename)
+            write_MC_file(filename, args)
 
-        write_job_script(filenames, output_dir, num_proc, log)
+        write_job_script(filenames, output_dir, args)
 
         os.chdir("..")
 
@@ -144,6 +142,8 @@ def main(args):
 if __name__ == "__main__":
     parser = ArgumentParser(description = "Generate NWChem and MC-MPn-Direct input files for dimer calculations from dimer XYZ files.")
     parser.add_argument("-n", metavar = "[NO. OF THREADS]", type = int, default = 8, help = "Specify number of threads to use. Default: 8")
+    parser.add_argument("-ep", metavar = "[NO. OF ELECTRON PAIRS]", type = int, default = 64, help = "Specify number of electron pairs. Default: 64")
+    parser.add_argument("-e", metavar = "[NO. OF ELECTRONS]", type = int, default = 32, help = "Specify number of electrons to use. Default: 32")
     parser.add_argument("--log", action = "store_true", help = "Log NWChem and MC-MPn-Direct stdout and stderr using tee.")
     parser.add_argument("xyz_files", metavar = "xyz_files", type = str, nargs = '+', help = "Dimer XYZ files.")
     args = parser.parse_args()
