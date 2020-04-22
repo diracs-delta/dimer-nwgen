@@ -70,7 +70,9 @@ def write_MC_file(filename, dimer_filename, args):
         f.write("GEOM {0}.xyz\n".format(filename))
         f.write("BASIS ../basis/aug-cc-pvdz.basis\n")
         f.write("MC_BASIS ../basis/aug-cc-pvdz.mc_basis\n")
-        f.write("MOVECS {0}.movecs\n".format(filename))
+        f.write("MOVECS\n")
+        f.write("\t{0}.movecs\n".format(filename))
+        f.write("END")
 
 
 def write_job_script(filenames, output_dir, args):
