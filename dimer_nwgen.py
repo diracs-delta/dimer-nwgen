@@ -73,16 +73,22 @@ def write_MC_file(filename):
         f.write("MOVECS {0}.movecs\n".format(filename))
 
 
-def write_job_script(filenames, output_dir, num_proc):
+def write_job_script(filenames, output_dir, num_proc, log):
     with open("run-nw.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         for filename in filenames:
-            f.write("mpirun -np {1} nwchem {0}.nwin 2>&1 | tee -a {0}.log\n".format(filename, num_proc))
+            if log:
+                f.write("mpirun -np {1} nwchem {0}.nwin 2>&1 | tee -a {0}.log\n".format(filename, num_proc))
+            else:
+                f.write("mpirun -np {1} nwchem {0}.nwin\n".format(filename, num_proc))
 
     with open("run-mc.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         for filename in filenames:
-            f.write("mpirun -np {1} MC_MPn_Direct {0}.mcin 2>&1 | tee -a {0}.log\n".format(filename, num_proc))
+            if log:
+                f.write("mpirun -np {1} MC_MPn_Direct {0}.mcin 2>&1 | tee -a {0}.log\n".format(filename, num_proc))
+            else:
+                f.write("mpirun -np {1} MC_MPn_Direct {0}.mcin\n".format(filename, num_proc))
 
     with open("../run-all-nw.sh", 'a') as f:
         f.write("cd {0}\n".format(output_dir))
@@ -101,6 +107,7 @@ def write_job_script(filenames, output_dir, num_proc):
 def main(args):
     xyz_files = args.xyz_files
     num_proc = args.n
+    log = args.log
 
     with open("run-all-nw.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
@@ -129,7 +136,7 @@ def main(args):
             write_task(filename)
             write_MC_file(filename)
 
-        write_job_script(filenames, output_dir, num_proc)
+        write_job_script(filenames, output_dir, num_proc, log)
 
         os.chdir("..")
 
@@ -137,6 +144,7 @@ def main(args):
 if __name__ == "__main__":
     parser = ArgumentParser(description = "Generate NWChem and MC-MPn-Direct input files for dimer calculations from dimer XYZ files.")
     parser.add_argument("-n", metavar = "[NO. OF THREADS]", type = int, default = 8, help = "Specify number of threads to use. Default: 8")
+    parser.add_argument("--log", action = "store_true", help = "Log NWChem and MC-MPn-Direct stdout and stderr using tee.")
     parser.add_argument("xyz_files", metavar = "xyz_files", type = str, nargs = '+', help = "Dimer XYZ files.")
     args = parser.parse_args()
 
