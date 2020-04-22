@@ -82,7 +82,7 @@ def write_job_script(filenames, output_dir):
     with open("run-mc.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         for filename in filenames:
-            f.write("mpirun -np 8 MC_MPn_Direct {0}.nwin &> {0}.log\n".format(filename))
+            f.write("mpirun -np 8 MC_MPn_Direct {0}.mcin &> {0}.log\n".format(filename))
 
     with open("../run-all-nw.sh", 'a') as f:
         f.write("cd {0}\n".format(output_dir))
