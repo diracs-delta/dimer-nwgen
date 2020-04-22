@@ -35,7 +35,7 @@ def write_geometry(filename, xyz):
 
 def write_basis(filename, atoms):
     with open(filename + ".nwin", 'a') as f:
-        f.write("basis\n")
+        f.write("basis spherical\n")
         f.write("    * library aug-cc-pvdz\n")
         for atom in atoms:
             f.write("    x{} library {} aug-cc-pvdz\n".format(atom, atom.lower()))
@@ -64,7 +64,6 @@ def write_MC_file(filename):
         f.write("ELECTRONS 64\n")
         f.write("SEED_FILE {0}.MP2_F12_VBX.cv_TRUE\n".format(filename))
         f.write("DEBUG {0}\n".format("0" if dimer else "2"))
-        f.write("SPHERICAL 0\n")
         f.write("SAMPLER DIRECT\n")
         f.write("TAU_INTEGRATION STOCHASTIC\n")
         f.write("GEOM {0}.xyz\n".format(filename))
