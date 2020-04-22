@@ -2,6 +2,7 @@
 
 import sys
 import os
+from argparse import ArgumentParser
 
 
 def write_title(filename):
@@ -72,16 +73,16 @@ def write_MC_file(filename):
         f.write("MOVECS {0}.movecs\n".format(filename))
 
 
-def write_job_script(filenames, output_dir):
+def write_job_script(filenames, output_dir, num_proc):
     with open("run-nw.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         for filename in filenames:
-            f.write("mpirun -np 8 nwchem {0}.nwin 2>&1 | tee -a {0}.log\n".format(filename))
+            f.write("mpirun -np {1} nwchem {0}.nwin 2>&1 | tee -a {0}.log\n".format(filename, num_proc))
 
     with open("run-mc.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         for filename in filenames:
-            f.write("mpirun -np 8 MC_MPn_Direct {0}.mcin 2>&1 | tee -a {0}.log\n".format(filename))
+            f.write("mpirun -np {1} MC_MPn_Direct {0}.mcin 2>&1 | tee -a {0}.log\n".format(filename, num_proc))
 
     with open("../run-all-nw.sh", 'a') as f:
         f.write("cd {0}\n".format(output_dir))
@@ -97,8 +98,9 @@ def write_job_script(filenames, output_dir):
     os.chmod("run-mc.sh", 0o755)
 
 
-def main():
-    input_xyz_list = sys.argv[1:]
+def main(args):
+    xyz_files = args.xyz_files
+    num_proc = args.n
 
     with open("run-all-nw.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
@@ -107,7 +109,7 @@ def main():
     os.chmod("run-all-nw.sh", 0o755)
     os.chmod("run-all-mc.sh", 0o755)
 
-    for input_xyz in input_xyz_list:
+    for input_xyz in xyz_files:
         output_dir = input_xyz[:-10]
         with open(input_xyz, "r") as f:
             xyz = f.readlines()
@@ -127,14 +129,15 @@ def main():
             write_task(filename)
             write_MC_file(filename)
 
-        write_job_script(filenames, output_dir)
+        write_job_script(filenames, output_dir, num_proc)
 
         os.chdir("..")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("usage: dimer_nwgen.py [dimer XYZ file]")
-        print("dimer XYZ file must end in '_dimer.xyz'")
-    else:
-        main()
+    parser = ArgumentParser(description = "Generate NWChem and MC-MPn-Direct input files for dimer calculations from dimer XYZ files.")
+    parser.add_argument("-n", metavar = "[NO. OF THREADS]", type = int, default = 8, help = "Specify number of threads to use. Default: 8")
+    parser.add_argument("xyz_files", metavar = "xyz_files", type = str, nargs = '+', help = "Dimer XYZ files.")
+    args = parser.parse_args()
+
+    main(args)
