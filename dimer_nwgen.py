@@ -56,13 +56,15 @@ def write_MC_file(filename):
     with open(filename + ".mcin", 'w') as f:
         f.write("JOBNAME {0}.MP2_F12_VBX.cv_TRUE\n".format(filename))
         f.write("JOBTYPE ENERGY\n")
+        f.write("TASK MP2\n")
         f.write("TASK MP2_F12_VBX\n")
         f.write("MP2CV_LEVEL 2\n")
-        f.write("MC_TRIAL 1024\n")
+        f.write("MC_TRIAL 1048576\n")
         f.write("ELECTRON_PAIRS 128\n")
         f.write("ELECTRONS 64\n")
         f.write("SEED_FILE {0}.MP2_F12_VBX.cv_TRUE\n".format(filename))
         f.write("DEBUG {0}\n".format("0" if dimer else "2"))
+        f.write("SPHERICAL 0\n")
         f.write("SAMPLER DIRECT\n")
         f.write("TAU_INTEGRATION STOCHASTIC\n")
         f.write("GEOM {0}.xyz\n".format(filename))
@@ -77,9 +79,9 @@ def write_job_script(filenames, output_dir):
         for filename in filenames:
             f.write("mpirun -np 6 nwchem {0}.nwin &> {0}.log\n".format(filename))
 
-    with open("../run-all.sh", 'a') as f:
+    with open("../run-all-nw.sh", 'a') as f:
         f.write("cd {0}\n".format(output_dir))
-        f.write("./run.sh\n")
+        f.write("./run-nw.sh\n")
         f.write("cd ..\n")
 
     os.chmod("run.sh", 0o755)
@@ -114,7 +116,6 @@ def main():
         write_job_script(filenames, output_dir)
 
         os.chdir("..")
-
 
 
 if __name__ == "__main__":
