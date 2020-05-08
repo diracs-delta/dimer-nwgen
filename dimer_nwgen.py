@@ -98,12 +98,12 @@ def write_job_script(filenames, output_dir, args):
     with open("queue-nw.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         filename = filenames[0]
-        f.write("qsub -pe orte -V -b -n -N {0} -cwd ./run-nw.sh\n".format(filename, args.n))
+        f.write("qsub -pe orte {1} -V -b -n -N {0} -cwd ./run-nw.sh\n".format(filename, args.n))
 
     with open("queue-mc.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         filename = filenames[0]
-        f.write("qsub -pe orte -V -b -n -N {0} -cwd ./run-mc.sh\n".format(filename, args.n))
+        f.write("qsub -pe orte {1} -V -b -n -N {0} -cwd ./run-mc.sh\n".format(filename, args.n))
 
     with open("../run-all-nw.sh", 'a') as f:
         f.write("cd {0}\n".format(output_dir))
