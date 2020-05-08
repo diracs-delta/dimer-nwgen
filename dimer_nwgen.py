@@ -37,12 +37,12 @@ def write_geometry(filename, xyz, noautoz):
     return atoms
 
 
-def write_basis(filename, atoms):
+def write_basis(filename, atoms, basis):
     with open(filename + ".nwin", 'a') as f:
         f.write("basis spherical\n")
-        f.write("    * library aug-cc-pvdz\n")
+        f.write("    * library {0}\n".format(basis))
         for atom in atoms:
-            f.write("    x{} library {} aug-cc-pvdz\n".format(atom, atom.lower()))
+            f.write("    x{0} library {1} {2}\n".format(atom, atom.lower(), basis))
         f.write("end\n\n")
 
 
@@ -71,8 +71,8 @@ def write_MC_file(filename, dimer_filename, args):
         f.write("SAMPLER DIRECT\n")
         f.write("TAU_INTEGRATION STOCHASTIC\n")
         f.write("GEOM {0}.xyz\n".format(filename))
-        f.write("BASIS ../basis/aug-cc-pvdz.basis\n")
-        f.write("MC_BASIS ../basis/aug-cc-pvdz.mc_basis\n")
+        f.write("BASIS ../basis/{0}.basis\n".format(args.basis))
+        f.write("MC_BASIS ../basis/{0}.mc_basis\n".format(args.basis))
         f.write("MOVECS\n")
         f.write("\t{0}.movecs\n".format(filename))
         f.write("END")
@@ -136,7 +136,7 @@ def main(args):
         for filename in filenames:
             write_title(filename)
             atoms = write_geometry(filename, xyz, args.noautoz)
-            write_basis(filename, atoms)
+            write_basis(filename, atoms, args.basis)
             write_task(filename)
             write_MC_file(filename, dimer_filename, args)
 
@@ -154,6 +154,7 @@ if __name__ == "__main__":
     parser.add_argument("xyz_files", metavar = "xyz_files", type = str, nargs = '+', help = "Dimer XYZ files.")
 
     parser.add_argument("--noautoz", action = "store_true", help = "Enables noautoz option in NWChem.")
+    parser.add_argument("--basis", type = str, default = "aug-cc-pvdz", help = "Specifies basis set.")
 
     args = parser.parse_args()
 
