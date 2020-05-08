@@ -10,7 +10,7 @@ def write_title(filename):
         f.write('title "{}"\n\n'.format(filename))
 
 
-def write_geometry(filename, xyz):
+def write_geometry(filename, xyz, noautoz):
     n = int(xyz[0][:-1])
     if(filename.endswith("monomer_a")):
         dummy = ["x" + xyz[i] if i > n / 2 else xyz[i] for i in range(n + 1)]
@@ -27,7 +27,10 @@ def write_geometry(filename, xyz):
     with open(filename + ".xyz", 'w') as f:
         f.write("".join(dummy))
     with open(filename + ".nwin", 'a') as f:
-        f.write("geometry nocenter noautoz\n")
+        if noautoz:
+            f.write("geometry nocenter noautoz\n")
+        else:
+            f.write("geometry nocenter\n")
         f.write("".join(["    " + line for line in dummy[2:]]))
         f.write('end\n\n')
 
@@ -132,7 +135,7 @@ def main(args):
 
         for filename in filenames:
             write_title(filename)
-            atoms = write_geometry(filename, xyz)
+            atoms = write_geometry(filename, xyz, args.noautoz)
             write_basis(filename, atoms)
             write_task(filename)
             write_MC_file(filename, dimer_filename, args)
@@ -149,6 +152,9 @@ if __name__ == "__main__":
     parser.add_argument("-e", metavar = "[NO. OF ELECTRONS]", type = int, default = 32, help = "Specify number of electrons to use. Default: 32")
     parser.add_argument("--log", action = "store_true", help = "Log NWChem and MC-MPn-Direct stdout and stderr using tee.")
     parser.add_argument("xyz_files", metavar = "xyz_files", type = str, nargs = '+', help = "Dimer XYZ files.")
+
+    parser.add_argument("--noautoz", action = "store_true", help = "Enables noautoz option in NWChem.")
+
     args = parser.parse_args()
 
     main(args)
