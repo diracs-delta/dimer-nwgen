@@ -95,6 +95,16 @@ def write_job_script(filenames, output_dir, args):
             else:
                 f.write("mpirun -np {1} MC_MPn_Direct {0}.mcin\n".format(filename, args.n))
 
+    with open("queue-nw.sh", 'w') as f:
+        f.write("#!/usr/bin/env bash\n\n")
+        filename = filenames[0]
+        f.write("qsub -pe orte -V -b -n -N {0} -cwd ./run-nw.sh\n".format(filename, args.n))
+
+    with open("queue-mc.sh", 'w') as f:
+        f.write("#!/usr/bin/env bash\n\n")
+        filename = filenames[0]
+        f.write("qsub -pe orte -V -b -n -N {0} -cwd ./run-mc.sh\n".format(filename, args.n))
+
     with open("../run-all-nw.sh", 'a') as f:
         f.write("cd {0}\n".format(output_dir))
         f.write("./run-nw.sh\n")
@@ -105,8 +115,20 @@ def write_job_script(filenames, output_dir, args):
         f.write("./run-mc.sh\n")
         f.write("cd ..\n")
 
+    with open("../queue-all-nw.sh", 'a') as f:
+        f.write("cd {0}\n".format(output_dir))
+        f.write("./queue-nw.sh\n")
+        f.write("cd ..\n")
+
+    with open("../queue-all-mc.sh", 'a') as f:
+        f.write("cd {0}\n".format(output_dir))
+        f.write("./queue-mc.sh\n")
+        f.write("cd ..\n")
+
     os.chmod("run-nw.sh", 0o755)
     os.chmod("run-mc.sh", 0o755)
+    os.chmod("queue-nw.sh", 0o755)
+    os.chmod("queue-mc.sh", 0o755)
 
 
 def main(args):
@@ -116,8 +138,15 @@ def main(args):
         f.write("#!/usr/bin/env bash\n\n")
     with open("run-all-mc.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
+    with open("queue-all-nw.sh", 'w') as f:
+        f.write("#!/usr/bin/env bash\n\n")
+    with open("queue-all-mc.sh", 'w') as f:
+        f.write("#!/usr/bin/env bash\n\n")
+
     os.chmod("run-all-nw.sh", 0o755)
     os.chmod("run-all-mc.sh", 0o755)
+    os.chmod("queue-all-nw.sh", 0o755)
+    os.chmod("queue-all-mc.sh", 0o755)
 
     for input_xyz in xyz_files:
         output_dir = input_xyz[:-10]
