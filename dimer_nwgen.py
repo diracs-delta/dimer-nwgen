@@ -147,7 +147,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser(description = "Generate NWChem and MC-MPn-Direct input files for dimer calculations from dimer XYZ files.")
-    parser.add_argument("-n", metavar = "[NO. OF THREADS]", type = int, default = 8, help = "Specify number of threads to use. Default: 8")
+    parser.add_argument("-n", metavar = "[NO. OF THREADS]", type = int, default = 16, help = "Specify number of threads to use. Default: 16")
     parser.add_argument("-ep", metavar = "[NO. OF ELECTRON PAIRS]", type = int, default = 64, help = "Specify number of electron pairs. Default: 64")
     parser.add_argument("-e", metavar = "[NO. OF ELECTRONS]", type = int, default = 32, help = "Specify number of electrons to use. Default: 32")
     parser.add_argument("--log", action = "store_true", help = "Log NWChem and MC-MPn-Direct stdout and stderr using tee.")
