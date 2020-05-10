@@ -98,12 +98,19 @@ def write_job_script(filenames, output_dir, args):
     with open("queue-nw.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         filename = filenames[0]
-        f.write("qsub -pe orte {1} -V -b n -N {0} -cwd ./run-nw.sh\n".format(filename, args.n))
+        if args.mail == "NONE":
+            f.write("qsub -pe orte {1} -V -b n -N {0} -cwd ./run-nw.sh\n".format(filename, args.n))
+        else:
+            f.write("qsub -m abe -M {2} -pe orte {1} -V -b n -N {0} -cwd ./run-nw.sh\n".format(filename, args.n, args.mail))
 
     with open("queue-mc.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         filename = filenames[0]
-        f.write("qsub -pe orte {1} -V -b n -N {0} -cwd ./run-mc.sh\n".format(filename, args.n))
+        if args.mail == "NONE":
+            f.write("qsub -pe orte {1} -V -b n -N {0} -cwd ./run-mc.sh\n".format(filename, args.n))
+        else:
+            f.write("qsub -m abe -M {2} -pe orte {1} -V -b n -N {0} -cwd ./run-mc.sh\n".format(filename, args.n, args.mail))
+
 
     with open("../run-all-nw.sh", 'a') as f:
         f.write("cd {0}\n".format(output_dir))
@@ -181,9 +188,9 @@ if __name__ == "__main__":
     parser.add_argument("-e", metavar = "[NO. OF ELECTRONS]", type = int, default = 32, help = "Specify number of electrons to use. Default: 32")
     parser.add_argument("--log", action = "store_true", help = "Log NWChem and MC-MPn-Direct stdout and stderr using tee.")
     parser.add_argument("xyz_files", metavar = "xyz_files", type = str, nargs = '+', help = "Dimer XYZ files.")
-
     parser.add_argument("--noautoz", action = "store_true", help = "Enables noautoz option in NWChem.")
     parser.add_argument("--basis", type = str, default = "aug-cc-pvdz", help = "Specifies basis set.")
+    parser.add_argument("--mail", type = str, default = "NONE", metavar = "[EMAIL]", help = "Send email when queued jobs are complete.")
 
     args = parser.parse_args()
 
