@@ -10,7 +10,7 @@ def write_title(filename):
         f.write('title "{}"\n\n'.format(filename))
 
 
-def write_geometry(filename, xyz, noautoz):
+def write_geometry(filename, xyz, args):
     n = int(xyz[0][:-1])
     if(filename.endswith("monomer_a")):
         dummy = ["x" + xyz[i] if i > n / 2 else xyz[i] for i in range(n + 1)]
@@ -27,10 +27,12 @@ def write_geometry(filename, xyz, noautoz):
     with open(filename + ".xyz", 'w') as f:
         f.write("".join(dummy))
     with open(filename + ".nwin", 'a') as f:
-        if noautoz:
-            f.write("geometry nocenter noautoz\n")
-        else:
-            f.write("geometry nocenter\n")
+        f.write("geometry nocenter")
+        if args.noautoz:
+            f.write(" noautoz")
+        if args.noautosym:
+            f.write(" noautosym")
+        f.write("\n")
         f.write("".join(["    " + line for line in dummy[2:]]))
         f.write('end\n\n')
 
@@ -171,7 +173,7 @@ def main(args):
 
         for filename in filenames:
             write_title(filename)
-            atoms = write_geometry(filename, xyz, args.noautoz)
+            atoms = write_geometry(filename, xyz, args)
             write_basis(filename, atoms, args.basis)
             write_task(filename)
             write_MC_file(filename, dimer_filename, args)
@@ -183,14 +185,18 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser(description = "Generate NWChem and MC-MPn-Direct input files for dimer calculations from dimer XYZ files.")
+
+    parser.add_argument("xyz_files", metavar = "xyz_files", type = str, nargs = '+', help = "Dimer XYZ files.")
+
     parser.add_argument("-n", metavar = "[NO. OF THREADS]", type = int, default = 16, help = "Specify number of threads to use. Default: 16")
     parser.add_argument("-ep", metavar = "[NO. OF ELECTRON PAIRS]", type = int, default = 64, help = "Specify number of electron pairs. Default: 64")
     parser.add_argument("-e", metavar = "[NO. OF ELECTRONS]", type = int, default = 32, help = "Specify number of electrons to use. Default: 32")
-    parser.add_argument("--log", action = "store_true", help = "Log NWChem and MC-MPn-Direct stdout and stderr using tee.")
-    parser.add_argument("xyz_files", metavar = "xyz_files", type = str, nargs = '+', help = "Dimer XYZ files.")
-    parser.add_argument("--noautoz", action = "store_true", help = "Enables noautoz option in NWChem.")
-    parser.add_argument("--basis", type = str, default = "aug-cc-pvdz", help = "Specifies basis set.")
+    parser.add_argument("--basis", type = str, default = "aug-cc-pvdz", help = "Specifies basis set. Default: aug-cc-pVDZ")
     parser.add_argument("--mail", type = str, default = "NONE", metavar = "[EMAIL]", help = "Send email when queued jobs are complete.")
+
+    parser.add_argument("--log", action = "store_true", help = "Log NWChem and MC-MPn-Direct stdout and stderr using tee.")
+    parser.add_argument("--noautoz", action = "store_true", help = "Enables noautoz option in NWChem.")
+    parser.add_argument("--noautosym", action = "store_true", help = "Enables noautosym option in NWChem.")
 
     args = parser.parse_args()
 
