@@ -5,9 +5,11 @@ import os
 from argparse import ArgumentParser
 
 
-def write_title(filename):
+def write_title(filename, args):
     with open(filename + ".nwin", 'w') as f:
         f.write('title "{}"\n\n'.format(filename))
+        if args.mem != 0:
+            f.write("memory {0} mb\n\n".format(args.mem))
 
 
 def write_geometry(filename, xyz, args):
@@ -172,7 +174,7 @@ def main(args):
         os.chdir(output_dir)
 
         for filename in filenames:
-            write_title(filename)
+            write_title(filename, args)
             atoms = write_geometry(filename, xyz, args)
             write_basis(filename, atoms, args.basis)
             write_task(filename)
@@ -192,11 +194,13 @@ if __name__ == "__main__":
     parser.add_argument("-ep", metavar = "[NO. OF ELECTRON PAIRS]", type = int, default = 64, help = "Specify number of electron pairs. Default: 64")
     parser.add_argument("-e", metavar = "[NO. OF ELECTRONS]", type = int, default = 32, help = "Specify number of electrons to use. Default: 32")
     parser.add_argument("--basis", type = str, default = "aug-cc-pvdz", help = "Specifies basis set. Default: aug-cc-pVDZ")
+    parser.add_argument("--mem", type = int, default = 0, help = "Explicitly specify NWChem allocated memory per thread in MB.")
     parser.add_argument("--mail", type = str, default = "NONE", metavar = "[EMAIL]", help = "Send email when queued jobs are complete.")
 
     parser.add_argument("--log", action = "store_true", help = "Log NWChem and MC-MPn-Direct stdout and stderr using tee.")
     parser.add_argument("--noautoz", action = "store_true", help = "Enables noautoz option in NWChem.")
     parser.add_argument("--noautosym", action = "store_true", help = "Enables noautosym option in NWChem.")
+
 
     args = parser.parse_args()
 
