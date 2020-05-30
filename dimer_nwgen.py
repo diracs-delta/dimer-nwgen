@@ -78,7 +78,12 @@ def write_MC_file(filename, dimer_filename, args):
         f.write("BASIS ../basis/{0}.basis\n".format(args.basis))
         f.write("MC_BASIS ../basis/{0}.mc_basis\n".format(args.basis))
         f.write("MOVECS\n")
-        f.write("\t{0}.movecs\n".format(filename))
+
+        if args.movecs_dir:
+            f.write("\t../movecs/{0}.movecs\n".format(filename))
+        else:
+            f.write("\t{0}.movecs\n".format(filename))
+
         f.write("END")
 
 
@@ -201,6 +206,7 @@ if __name__ == "__main__":
     parser.add_argument("--log", action = "store_true", help = "Log NWChem and MC-MPn-Direct stdout and stderr using tee.")
     parser.add_argument("--noautoz", action = "store_true", help = "Enables noautoz option in NWChem.")
     parser.add_argument("--noautosym", action = "store_true", help = "Enables noautosym option in NWChem.")
+    parser.add_argument("--movecs-dir", action = "store_true", help = "Use separately stored movecs from '../movecs'.")
 
 
     args = parser.parse_args()
