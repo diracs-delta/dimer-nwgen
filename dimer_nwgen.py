@@ -67,7 +67,7 @@ def write_MC_file(filename, dimer_filename, args):
         f.write("TASK MP2\n")
         f.write("TASK MP2_F12_VBX\n")
         f.write("MP2CV_LEVEL 2\n")
-        f.write("MC_TRIAL 1048576\n")
+        f.write("MC_TRIAL {0}\n".format(args.s))
         f.write("ELECTRON_PAIRS {0}\n".format(args.ep))
         f.write("ELECTRONS {0}\n".format(args.e))
         f.write("SEED_FILE {0}.MP2_F12_VBX.cv_TRUE.SEED\n".format(dimer_filename))
@@ -191,6 +191,7 @@ if __name__ == "__main__":
     parser.add_argument("xyz_files", metavar = "xyz_files", type = str, nargs = '+', help = "Dimer XYZ files.")
 
     parser.add_argument("-n", metavar = "[NO. OF THREADS]", type = int, default = 16, help = "Specify number of threads to use. Default: 16")
+    parser.add_argument("-s", metavar = "[NO. OF STEPS]", type = int, default = 4096, help = "Specify number of steps to use. Default: 4096")
     parser.add_argument("-ep", metavar = "[NO. OF ELECTRON PAIRS]", type = int, default = 64, help = "Specify number of electron pairs. Default: 64")
     parser.add_argument("-e", metavar = "[NO. OF ELECTRONS]", type = int, default = 32, help = "Specify number of electrons to use. Default: 32")
     parser.add_argument("--basis", type = str, default = "aug-cc-pvdz", help = "Specifies basis set. Default: aug-cc-pVDZ")
