@@ -87,7 +87,7 @@ def write_MC_file(filename, dimer_filename, args):
         f.write("END")
 
 
-def write_job_script(filenames, output_dir, args):
+def write_job_script(filenames, molecule_name, args):
     with open("run-nw.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         for filename in filenames:
@@ -122,22 +122,22 @@ def write_job_script(filenames, output_dir, args):
 
 
     with open("../run-all-nw.sh", 'a') as f:
-        f.write("cd {0}\n".format(output_dir))
+        f.write("cd {0}\n".format(molecule_name))
         f.write("./run-nw.sh\n")
         f.write("cd ..\n")
 
     with open("../run-all-mc.sh", 'a') as f:
-        f.write("cd {0}\n".format(output_dir))
+        f.write("cd {0}\n".format(molecule_name))
         f.write("./run-mc.sh\n")
         f.write("cd ..\n")
 
     with open("../queue-all-nw.sh", 'a') as f:
-        f.write("cd {0}\n".format(output_dir))
+        f.write("cd {0}\n".format(molecule_name))
         f.write("./queue-nw.sh\n")
         f.write("cd ..\n")
 
     with open("../queue-all-mc.sh", 'a') as f:
-        f.write("cd {0}\n".format(output_dir))
+        f.write("cd {0}\n".format(molecule_name))
         f.write("./queue-mc.sh\n")
         f.write("cd ..\n")
 
@@ -165,13 +165,18 @@ def main(args):
     os.chmod("queue-all-mc.sh", 0o755)
 
     for input_xyz in xyz_files:
-        output_dir = input_xyz[:-10]
+        molecule_name = input_xyz[:-10]
+        if args.dir_name != "NONE":
+            output_dir = args.dir_name
+        else:
+            output_dir = molecule_name
+
         with open(input_xyz, "r") as f:
             xyz = f.readlines()
             xyz = [str(line).lstrip() for line in xyz if line != "\n"]
-        filenames = (output_dir + "_dimer",
-                     output_dir + "_monomer_a",
-                     output_dir + "_monomer_b")
+        filenames = (molecule_name + "_dimer",
+                     molecule_name + "_monomer_a",
+                     molecule_name + "_monomer_b")
         dimer_filename = filenames[0]
 
         if not os.path.exists(output_dir):
@@ -185,7 +190,7 @@ def main(args):
             write_task(filename)
             write_MC_file(filename, dimer_filename, args)
 
-        write_job_script(filenames, output_dir, args)
+        write_job_script(filenames, molecule_name, args)
 
         os.chdir("..")
 
@@ -202,6 +207,7 @@ if __name__ == "__main__":
     parser.add_argument("--basis", type = str, default = "aug-cc-pvdz", help = "Specifies basis set. Default: aug-cc-pVDZ")
     parser.add_argument("--mem", type = int, default = 0, help = "Explicitly specify NWChem allocated memory per thread in MB.")
     parser.add_argument("--mail", type = str, default = "NONE", metavar = "[EMAIL]", help = "Send email when queued jobs are complete.")
+    parser.add_argument("--dir-name", type = str, default = "NONE", help = "Specify name of created directory.")
 
     parser.add_argument("--log", action = "store_true", help = "Log NWChem and MC-MPn-Direct stdout and stderr using tee.")
     parser.add_argument("--noautoz", action = "store_true", help = "Enables noautoz option in NWChem.")
