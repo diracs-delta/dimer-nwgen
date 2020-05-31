@@ -171,6 +171,9 @@ def main(args):
         else:
             output_dir = molecule_name
 
+        if args.dir_info:
+            output_dir += "_{0}E_{1}EP".format(args.e, args.ep)
+
         with open(input_xyz, "r") as f:
             xyz = f.readlines()
             xyz = [str(line).lstrip() for line in xyz if line != "\n"]
@@ -213,7 +216,7 @@ if __name__ == "__main__":
     parser.add_argument("--noautoz", action = "store_true", help = "Enables noautoz option in NWChem.")
     parser.add_argument("--noautosym", action = "store_true", help = "Enables noautosym option in NWChem.")
     parser.add_argument("--movecs-dir", action = "store_true", help = "Use separately stored movecs from '../movecs'.")
-
+    parser.add_argument("--dir-info", action = "store_true", help = "Include info on electrons and electorn pairs in directory name.")
 
     args = parser.parse_args()
 
