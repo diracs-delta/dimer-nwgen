@@ -87,7 +87,10 @@ def write_MC_file(filename, dimer_filename, args):
         f.write("END")
 
 
-def write_job_script(filenames, molecule_name, args):
+# molecule_name: just the molecular system, e.g. "c60" for "c60_dimer.xyz"
+# molecule_info: additional info added, e.g. number of electron pairs
+# TODO: clean this damn script up
+def write_job_script(filenames, molecule_name, molecule_info, args):
     with open("run-nw.sh", 'w') as f:
         f.write("#!/usr/bin/env bash\n\n")
         for filename in filenames:
@@ -105,21 +108,28 @@ def write_job_script(filenames, molecule_name, args):
                 f.write("mpirun -np {1} MC_MPn_Direct {0}.mcin\n".format(filename, args.n))
 
     with open("queue-nw.sh", 'w') as f:
+        jobname = molecule_name + molecule_info
+
         f.write("#!/usr/bin/env bash\n\n")
-        filename = filenames[0]
-        if args.mail == "NONE":
-            f.write("qsub -pe orte {1} -V -b n -N {0} -cwd ./run-nw.sh\n".format(filename, args.n))
-        else:
-            f.write("qsub -m abe -M {2} -pe orte {1} -V -b n -N {0} -cwd ./run-nw.sh\n".format(filename, args.n, args.mail))
+        line = "qsub "
+
+        if args.mail != "NONE":
+            line += "-m abe -M {0} ".format(args.mail)
+
+        line += "-pe orte {1} -V -b n -N {0} -cwd ./run-nw.sh".format(jobname, args.n)
+        f.write(line)
 
     with open("queue-mc.sh", 'w') as f:
-        f.write("#!/usr/bin/env bash\n\n")
-        filename = filenames[0]
-        if args.mail == "NONE":
-            f.write("qsub -pe orte {1} -V -b n -N {0} -cwd ./run-mc.sh\n".format(filename, args.n))
-        else:
-            f.write("qsub -m abe -M {2} -pe orte {1} -V -b n -N {0} -cwd ./run-mc.sh\n".format(filename, args.n, args.mail))
+        jobname = molecule_name + molecule_info
 
+        f.write("#!/usr/bin/env bash\n\n")
+        line = "qsub "
+
+        if args.mail != "NONE":
+            line += "-m abe -M {0} ".format(args.mail)
+
+        line += "-pe orte {1} -V -b n -N {0} -cwd ./run-mc.sh".format(jobname, args.n)
+        f.write(line)
 
     with open("../run-all-nw.sh", 'a') as f:
         f.write("cd {0}\n".format(molecule_name))
@@ -166,13 +176,17 @@ def main(args):
 
     for input_xyz in xyz_files:
         molecule_name = input_xyz[:-10]
-        if args.dir_name != "NONE":
-            output_dir = args.dir_name
-        else:
-            output_dir = molecule_name
 
+        # TODO: i think these can be trimmed to 1 line
         if args.dir_info:
-            output_dir += "_{0}E_{1}EP".format(args.e, args.ep)
+            molecule_info = "_{0}E_{1}EP".format(args.e, args.ep)
+        else:
+            molecule_info = ""
+
+        if args.dir_name != "NONE":
+            output_dir = args.dir_name + molecule_info
+        else:
+            output_dir = molecule_name + molecule_info
 
         with open(input_xyz, "r") as f:
             xyz = f.readlines()
@@ -193,7 +207,7 @@ def main(args):
             write_task(filename)
             write_MC_file(filename, dimer_filename, args)
 
-        write_job_script(filenames, molecule_name, args)
+        write_job_script(filenames, molecule_name, molecule_info, args)
 
         os.chdir("..")
 
